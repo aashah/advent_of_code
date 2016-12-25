@@ -8,15 +8,14 @@ fn main() {
 
     let ref input_file = args[1];
     let directions:Vec<Vec<Direction>> = parse_input(input_file);
-    let mut final_code: Vec<u8> = vec![];
+    let mut final_code: Vec<char> = vec![];
 
     let mut digit_tracker = Dialpad::new();
     for direction_set in directions {
-        println!("Starting at {}", digit_tracker.digit);
         for code in direction_set {
             digit_tracker.move_direction(code);
         }
-        final_code.push(digit_tracker.digit as u8);
+        final_code.push(get(digit_tracker.x, digit_tracker.y));
     }
 
     println!("Final code: {:?}", final_code);
@@ -41,25 +40,43 @@ fn parse_input(file: &String) -> Vec<Vec<Direction>> {
     result
 }
 
+const DIALPAD_CHARS:[[char; 5]; 5] = [['-', '-', '1', '-', '-'],
+                                      ['-', '2', '3', '4', '-'],
+                                      ['5', '6', '7', '8', '9'],
+                                      ['-', 'A', 'B', 'C', '-'],
+                                      ['-', '-', 'D', '-', '-']];
+
 enum Direction { Up, Down, Right, Left }
 struct Dialpad {
-    digit: i8,
+    x: i8,
+    y: i8,
 }
 impl Dialpad {
     fn new() -> Dialpad {
-        Dialpad{digit: 5}
+        Dialpad{x: 0, y: 2}
     }
 
     fn move_direction(&mut self, direction: Direction) {
-       let mut row = (((self.digit - 1) as f32) / 3.).floor() as i8;
-       let mut col = (self.digit - 1) % 3;
-
        match direction {
-           Direction::Up    => if row > 0 { row = row - 1 },
-           Direction::Down  => if row < 2 { row = row + 1 },
-           Direction::Left  => if col > 0 { col = col - 1 } ,
-           Direction::Right => if col < 2 { col = col + 1 },
+           Direction::Up    => if self.can_move_up() { self.x = self.x - 1 },
+           Direction::Down  => if self.can_move_down() { self.x = self.x + 1 },
+           Direction::Right => if self.can_move_right() { self.y = self.y + 1 },
+           Direction::Left  => if self.can_move_left() { self.y = self.y - 1 },
        }
-       self.digit = row * 3 + (col + 1);
     }
+    fn can_move_up(&self) -> bool {
+        (self.x - 1) >= 0 && get(self.x - 1, self.y) != '-'
+    }
+    fn can_move_down(&self) -> bool {
+        (self.x + 1) < 5 && get(self.x + 1, self.y) != '-'
+    }
+    fn can_move_right(&self) -> bool {
+        (self.y + 1) < 5 && get(self.x, self.y + 1) != '-'
+    }
+    fn can_move_left(&self) -> bool {
+        (self.y - 1) >= 0 && get(self.x, self.y - 1) != '-'
+    }
+}
+fn get(x: i8, y: i8) -> char {
+    DIALPAD_CHARS[x as usize][y as usize]
 }
