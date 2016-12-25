@@ -44,15 +44,7 @@ fn parse_input(file: &String) -> Vec<Room> {
 }
 fn valid_rooms(rooms: Vec<Room>) -> u32 {
     rooms.iter().fold(0, |accumulator, room| {
-        let mut sorted:Vec<(&char, &u16)> = room.name.iter().collect();
-        sorted.sort_by(|a, b| {
-            if a.1 == b.1 { a.0.cmp(b.0) }
-            else { b.1.cmp(a.1) }
-        });
-        sorted.truncate(5);
-        let first_five:String = sorted.into_iter().map(|val| *val.0).collect();
-
-        if first_five == room.checksum { accumulator + room.sector_id }
+        if room.valid() { accumulator + room.sector_id }
         else { accumulator }
     })
 }
@@ -65,4 +57,15 @@ impl Room {
             checksum: String::new(),
         }
     }
+    fn valid(&self) -> bool {
+        let mut sorted:Vec<(&char, &u16)> = self.name.iter().collect();
+        sorted.sort_by(|a, b| {
+            if a.1 == b.1 { a.0.cmp(b.0) }
+            else { b.1.cmp(a.1) }
+        });
+        sorted.truncate(5);
+        let first_five:String = sorted.into_iter().map(|val| *val.0).collect();
+        first_five == self.checksum
+    }
+
 }
