@@ -1,23 +1,22 @@
 extern crate md5;
 
-#[derive(Debug)]
-struct Entry {
-    input: i32,
-    hash: String,
-}
-
 pub fn puzzle(input: &str) -> String {
-    (0..)
-        .map(|i| {
-                 Entry {
-                     input: i,
-                     hash: format!("{:x}", md5::compute(format!("{}{}", input, i))),
-                 }
-             })
-        .filter(|entry| entry.hash.starts_with("00000"))
-        .take(8)
-        .map(|entry| entry.hash.chars().nth(5).unwrap())
-        .collect()
+    let mut result = vec!['z'; 8];
+    let mut found_positions = 0;
+    for i in 0.. {
+        let hash = format!("{:x}", md5::compute(format!("{}{}", input, i)));
+        if hash.starts_with("00000") {
+            let pos = hash.chars().nth(5).unwrap().to_digit(16).unwrap();
+            if pos < 8 && result[pos as usize] == 'z' {
+                result[pos as usize] = hash.chars().nth(6).unwrap();
+                found_positions += 1;
+                if found_positions == 8 {
+                    break;
+                }
+            }
+        }
+    }
+    return result.drain(..).collect::<String>();
 }
 
 #[cfg(test)]
@@ -27,6 +26,6 @@ mod test {
     #[test]
     fn sample() {
         let input = "abc";
-        assert_eq!(puzzle(input), "18f47a30");
+        assert_eq!(puzzle(input), "05ace8e3");
     }
 }
