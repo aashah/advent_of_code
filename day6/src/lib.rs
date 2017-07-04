@@ -22,7 +22,7 @@ fn count(input: &str, column: usize) -> char {
 
     *counts
          .iter()
-         .max_by_key(|&(_key, value)| value)
+         .min_by_key(|&(_key, value)| value)
          .unwrap()
          .0
 }
@@ -48,9 +48,9 @@ vrdear
 dvrsen
 enarar";
 
-        assert_eq!(super::count(input, 0), 'e');
-        assert_eq!(super::count(input, 1), 'a');
-        assert_eq!(super::count(input, 2), 's');
-        assert_eq!(super::puzzle(input), "easter");
+        assert_eq!(super::count(input, 0), 'a');
+        assert_eq!(super::count(input, 1), 'd');
+        assert_eq!(super::count(input, 2), 'v');
+        assert_eq!(super::puzzle(input), "advent");
     }
 }
