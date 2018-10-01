@@ -1,5 +1,5 @@
 pub fn puzzle(input: &str) -> u32 {
-    return 0;
+    String::from(input).lines().map(diff).sum()
 }
 
 fn diff(line: &str) -> u32 {
@@ -13,6 +13,14 @@ fn diff(line: &str) -> u32 {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn puzzle() {
+        let input = "5 1 9 5
+7 5 3
+2 4 6 8";
+
+        assert_eq!(super::puzzle(input), 18);
+    }
     #[test]
     fn diff() {
         assert_eq!(super::diff("5 1 9 5"), 8);
