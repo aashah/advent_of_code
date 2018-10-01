@@ -1,20 +1,12 @@
 pub fn puzzle(input: &str) -> u32 {
     let mut count: u32 = 0;
-    let mut last_digit: u32 = 0;
+    let mut first_digits: Vec<u32> = input.chars().map(|c| c.to_digit(10).unwrap()).collect();
+    let second_digits = first_digits.split_off(input.len() / 2);
 
-    let digits: Vec<u32> = input.chars().map(|c| c.to_digit(10).unwrap()).collect();
-
-    for digit in digits.iter() {
-        if *digit == last_digit {
-            count = count + *digit;
+    for (c, d) in first_digits.iter().zip(second_digits.iter()) {
+        if c == d {
+            count = count + (c * 2);
         }
-
-        last_digit = *digit;
-    }
-
-    let first_digit: u32 = *digits.iter().next().unwrap();
-    if first_digit == last_digit {
-        count = count + first_digit;
     }
 
     return count;
@@ -23,10 +15,10 @@ pub fn puzzle(input: &str) -> u32 {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn simple() {
-        assert_eq!(super::puzzle("1122"), 3);
-        assert_eq!(super::puzzle("1111"), 4);
-        assert_eq!(super::puzzle("1234"), 0);
-        assert_eq!(super::puzzle("91212129"), 9);
+    fn part2() {
+        assert_eq!(super::puzzle("1212"), 6);
+        assert_eq!(super::puzzle("1221"), 0);
+        assert_eq!(super::puzzle("123123"), 12);
+        assert_eq!(super::puzzle("12131415"), 4);
     }
 }
