@@ -2,7 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
-extern crate day1;
+mod day1;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
