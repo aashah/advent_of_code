@@ -9,13 +9,37 @@ fn main() {
     let sum: u32 = reader.lines()
         .map(|line| line.expect("failed to parse line").parse::<u32>().unwrap())
         .map(|mass| fuel_required_for_mass(mass))
+        .map(|fuel| fuel + fuel_required_for_fuel(fuel))
         .sum();
 
-    println!("{}", sum)
+
+    println!("{}", sum);
 }
 
 fn fuel_required_for_mass(mass: u32) -> u32 {
-    (f64::from(mass) / 3.0 - 2.0) as u32
+    let intermediate = (f64::from(mass) / 3.0).floor() - 2.0;
+
+    if intermediate <= 0.0 {
+        return 0;
+    }
+
+    intermediate as u32
+}
+
+fn fuel_required_for_fuel(fuel: u32) -> u32 {
+   let mut sum = 0;
+   let mut last = fuel;
+   loop {
+      let foo = fuel_required_for_mass(last);
+      if foo == 0 {
+         break;
+      }
+
+      sum += foo;
+      last = foo;
+   }
+
+   sum
 }
 
 #[cfg(test)]
@@ -26,6 +50,13 @@ mod tests {
         assert_eq!(super::fuel_required_for_mass(14), 2);
         assert_eq!(super::fuel_required_for_mass(1969), 654);
         assert_eq!(super::fuel_required_for_mass(100756), 33583);
+    }
+
+    #[test]
+    fn fuel_required_for_fuel() {
+        assert_eq!(super::fuel_required_for_fuel(2), 0);
+        assert_eq!(super::fuel_required_for_fuel(654), 312);
+        assert_eq!(super::fuel_required_for_fuel(33583), 16763);
     }
 }
 
