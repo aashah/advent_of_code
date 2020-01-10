@@ -1,6 +1,26 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+struct Fuel {
+   mass: u32
+}
+
+impl Iterator for Fuel {
+   type Item = u32;
+
+   fn next(&mut self) -> Option<u32> {
+      let f = fuel_required_for_mass(self.mass);
+
+      if f == 0 {
+         return None;
+      }
+
+      self.mass = f;
+
+      Some(f)
+   }
+}
+
 fn main() {
     let filename = "data/day1.txt";
     let file = File::open(filename).unwrap();
@@ -27,19 +47,7 @@ fn fuel_required_for_mass(mass: u32) -> u32 {
 }
 
 fn fuel_required_for_fuel(fuel: u32) -> u32 {
-   let mut sum = 0;
-   let mut last = fuel;
-   loop {
-      let foo = fuel_required_for_mass(last);
-      if foo == 0 {
-         break;
-      }
-
-      sum += foo;
-      last = foo;
-   }
-
-   sum
+   Fuel{mass: fuel}.sum()
 }
 
 #[cfg(test)]
