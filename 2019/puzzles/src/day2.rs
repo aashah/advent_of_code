@@ -7,9 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let mut program: Vec<u32> = input
         .split(',')
         .map(|entry| entry.trim())
-        .map(|instruction| -> u32 {
-            instruction.parse::<u32>().expect("invalid instruction")
-        })
+        .map(|instruction| -> u32 { instruction.parse::<u32>().expect("invalid instruction") })
         .collect();
 
     // go into 1202 state
@@ -22,8 +20,16 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     Ok(())
 }
 
+fn binary_op(pc: usize, program: &mut Vec<u32>, f: fn(u32, u32) -> u32) -> usize {
+    let op1 = program[pc + 1] as usize;
+    let op2 = program[pc + 2] as usize;
+    let store_addr = program[pc + 3] as usize;
+    program[store_addr] = f(program[op1], program[op2]);
+
+    pc + 4
+}
+
 fn run(program: &mut Vec<u32>) {
-    // run program
     let mut pc = 0;
 
     loop {
@@ -31,29 +37,13 @@ fn run(program: &mut Vec<u32>) {
 
         match instruction {
             1 => {
-                // add
-                let op1 = program[pc+1] as usize;
-                let op2 = program[pc+2] as usize;
-                let store_addr = program[pc+3] as usize;
-                program[store_addr] = program[op1] + program[op2];
-
-                pc += 4;
+                pc = binary_op(pc, program, { |val1, val2| val1 + val2 });
             }
             2 => {
-                // multiply
-                let op1 = program[pc+1] as usize;
-                let op2 = program[pc+2] as usize;
-                let store_addr = program[pc+3] as usize;
-                program[store_addr] = program[op1] * program[op2];
-
-                pc += 4;
+                pc = binary_op(pc, program, { |val1, val2| val1 * val2 });
             }
-            99 => {
-                break
-            }
-            _ => {
-                panic!("bad instruction")
-            }
+            99 => break,
+            _ => panic!("bad instruction"),
         }
     }
 }
