@@ -1,15 +1,17 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::fs;
 
-fn parse_points(wire: &str) -> HashSet<(i32, i32)> {
+fn parse_points(wire: &str) -> HashMap<(i32, i32), u32> {
     let mut cur_point = (0, 0);
-    let mut points = HashSet::new();
+    let mut points = HashMap::new();
+    let mut steps = 0;
 
     wire.split(",").for_each(|piece| {
         let (dir, dist_str) = piece.split_at(1);
         let dist = dist_str.parse().unwrap();
 
         for _ in 0..dist {
+            steps += 1;
             match dir {
                 "U" => cur_point.1 += 1,
                 "D" => cur_point.1 -= 1,
@@ -17,7 +19,7 @@ fn parse_points(wire: &str) -> HashSet<(i32, i32)> {
                 "R" => cur_point.0 += 1,
                 _ => panic!("Invalid dir: {}", dir),
             }
-            points.insert(cur_point);
+            points.insert(cur_point, steps);
         }
     });
 
@@ -34,11 +36,12 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let wire2 = parse_points(wires[1]);
 
     let result = wire1
-        .intersection(&wire2)
-        .map(|point| point.0.abs() + point.1.abs())
-        .min()
-        .unwrap();
+        .iter()
+        .filter_map(|(pos, wire1_steps)| {
+            wire2.get(pos).map(|wire2_steps| wire1_steps + wire2_steps)
+        })
+        .min();
 
-    println!("Result {}", result);
+    println!("{:?}", result);
     Ok(())
 }
