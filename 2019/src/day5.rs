@@ -4,53 +4,19 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let filename = "data/day5.txt";
     let input = fs::read_to_string(filename)?;
 
-    let mut program: Vec<i32> = input
+    let memory: Vec<i32> = input
         .split(',')
         .map(|entry| entry.trim())
         .map(|instruction| -> i32 { instruction.parse::<i32>().expect("invalid instruction") })
         .collect();
 
-    run(&mut program, 1);
+    let mut program: Program = Program {
+        program: memory,
+        input: 1,
+    };
+    program.run();
 
     Ok(())
-}
-
-fn binary_op(pc: usize, program: &mut Vec<i32>, modes: &Vec<Mode>, f: fn(i32, i32) -> i32) {
-    let op1 = program[pc + 1];
-    let op2 = program[pc + 2];
-    let store_addr = program[pc + 3] as usize;
-
-    let param1 = foo(program, op1, &modes[0]);
-    let param2 = foo(program, op2, &modes[1]);
-    program[store_addr] = f(param1, param2);
-}
-
-fn foo(program: &Vec<i32>, val: i32, mode: &Mode) -> i32 {
-    return match mode {
-        Mode::Position => program[val as usize],
-        Mode::Immediate => val,
-    };
-}
-
-fn parse_instruction(opcode: i32) -> Instruction {
-    let op = opcode % 100;
-    let remainder = (opcode - op) / 100;
-
-    let mut modes = vec![];
-    for c in remainder.to_string().chars().rev() {
-        match c {
-            '0' => modes.push(Mode::Position),
-            '1' => modes.push(Mode::Immediate),
-            _ => panic!("bad mode"),
-        }
-    }
-
-    modes.resize(3, Mode::Position);
-
-    return Instruction {
-        op: op,
-        modes: modes,
-    };
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -65,39 +31,80 @@ struct Instruction {
     modes: Vec<Mode>,
 }
 
-fn run(program: &mut Vec<i32>, input: i32) {
-    let mut pc = 0;
+struct Program {
+    program: Vec<i32>,
+    input: i32,
+}
 
-    loop {
-        let instruction = parse_instruction(program[pc]);
+impl Program {
+    fn run(&mut self) {
+        let mut pc = 0;
 
-        match instruction.op {
-            1 => {
-                binary_op(pc, program, &instruction.modes, {
-                    |val1, val2| val1 + val2
-                });
-                pc += 4;
-            }
-            2 => {
-                binary_op(pc, program, &instruction.modes, {
-                    |val1, val2| val1 * val2
-                });
-                pc += 4;
-            }
-            3 => {
-                let param = program[pc + 1];
-                program[param as usize] = input;
+        loop {
+            let instruction = self.parse_instruction(self.program[pc]);
 
-                pc += 2;
+            match instruction.op {
+                1 => {
+                    self.binary_op(pc, &instruction.modes, { |val1, val2| val1 + val2 });
+                    pc += 4;
+                }
+                2 => {
+                    self.binary_op(pc, &instruction.modes, { |val1, val2| val1 * val2 });
+                    pc += 4;
+                }
+                3 => {
+                    let param = self.program[pc + 1];
+                    self.program[param as usize] = self.input;
+
+                    pc += 2;
+                }
+                4 => {
+                    let val = self.load(self.program[pc + 1], &instruction.modes[0]);
+                    println!("{}", val);
+                    pc += 2;
+                }
+                99 => break,
+                _ => panic!("bad instruction"),
             }
-            4 => {
-                let val = foo(program, program[pc + 1], &instruction.modes[0]);
-                println!("{}", val);
-                pc += 2;
-            }
-            99 => break,
-            _ => panic!("bad instruction"),
         }
+    }
+
+    fn binary_op(&mut self, pc: usize, modes: &Vec<Mode>, f: fn(i32, i32) -> i32) {
+        let op1 = self.program[pc + 1];
+        let op2 = self.program[pc + 2];
+        let store_addr = self.program[pc + 3] as usize;
+
+        let param1 = self.load(op1, &modes[0]);
+        let param2 = self.load(op2, &modes[1]);
+        self.program[store_addr] = f(param1, param2);
+    }
+
+    fn load(&self, val: i32, mode: &Mode) -> i32 {
+        return match mode {
+            Mode::Position => self.program[val as usize],
+            Mode::Immediate => val,
+        };
+    }
+
+    fn parse_instruction(&self, opcode: i32) -> Instruction {
+        let op = opcode % 100;
+        let remainder = (opcode - op) / 100;
+
+        let mut modes = vec![];
+        for c in remainder.to_string().chars().rev() {
+            match c {
+                '0' => modes.push(Mode::Position),
+                '1' => modes.push(Mode::Immediate),
+                _ => panic!("bad mode"),
+            }
+        }
+
+        modes.resize(3, Mode::Position);
+
+        return Instruction {
+            op: op,
+            modes: modes,
+        };
     }
 }
 
@@ -105,22 +112,31 @@ fn run(program: &mut Vec<i32>, input: i32) {
 mod tests {
     #[test]
     fn simple() {
-        let mut program = vec![1002, 4, 3, 4, 33];
-        super::run(&mut program, 1);
-        assert_eq!(program, vec!(1002, 4, 3, 4, 99));
+        let mut program = super::Program {
+            program: vec![1002, 4, 3, 4, 33],
+            input: 1,
+        };
+        program.run();
+        assert_eq!(program.program, vec!(1002, 4, 3, 4, 99));
     }
 
     #[test]
     fn simple_allows_negatives() {
-        let mut program = vec![1101, 100, -1, 4, 0];
-        super::run(&mut program, 1);
-        assert_eq!(program, vec!(1101, 100, -1, 4, 99));
+        let mut program = super::Program {
+            program: vec![1101, 100, -1, 4, 0],
+            input: 1,
+        };
+        program.run();
+        assert_eq!(program.program, vec!(1101, 100, -1, 4, 99));
     }
 
     #[test]
     fn simple_input() {
-        let mut program = vec![3, 1, 99];
-        super::run(&mut program, 5);
-        assert_eq!(program, vec!(3, 5, 99));
+        let mut program = super::Program {
+            program: vec![3, 1, 99],
+            input: 1,
+        };
+        program.run();
+        assert_eq!(program.program, vec!(3, 1, 99));
     }
 }
