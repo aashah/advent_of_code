@@ -10,11 +10,9 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
         .map(|instruction| -> i32 { instruction.parse::<i32>().expect("invalid instruction") })
         .collect();
 
-    let mut program: Program = Program {
-        program: memory,
-        input: 1,
-    };
+    let mut program = Program::new(memory, 1);
     program.run();
+    println!("{:?}", program.output);
 
     Ok(())
 }
@@ -34,9 +32,18 @@ struct Instruction {
 struct Program {
     program: Vec<i32>,
     input: i32,
+    output: Vec<i32>,
 }
 
 impl Program {
+    fn new(program: Vec<i32>, input: i32) -> Program {
+        Program {
+            program,
+            input,
+            output: vec![],
+        }
+    }
+
     fn run(&mut self) {
         let mut pc = 0;
 
@@ -60,7 +67,7 @@ impl Program {
                 }
                 4 => {
                     let val = self.load(self.program[pc + 1], &instruction.modes[0]);
-                    println!("{}", val);
+                    self.output.push(val);
                     pc += 2;
                 }
                 99 => break,
@@ -112,30 +119,21 @@ impl Program {
 mod tests {
     #[test]
     fn simple() {
-        let mut program = super::Program {
-            program: vec![1002, 4, 3, 4, 33],
-            input: 1,
-        };
+        let mut program = super::Program::new(vec![1002, 4, 3, 4, 33], 1);
         program.run();
         assert_eq!(program.program, vec!(1002, 4, 3, 4, 99));
     }
 
     #[test]
     fn simple_allows_negatives() {
-        let mut program = super::Program {
-            program: vec![1101, 100, -1, 4, 0],
-            input: 1,
-        };
+        let mut program = super::Program::new(vec![1101, 100, -1, 4, 0], 1);
         program.run();
         assert_eq!(program.program, vec!(1101, 100, -1, 4, 99));
     }
 
     #[test]
     fn simple_input() {
-        let mut program = super::Program {
-            program: vec![3, 1, 99],
-            input: 1,
-        };
+        let mut program = super::Program::new(vec![3, 1, 99], 1);
         program.run();
         assert_eq!(program.program, vec!(3, 1, 99));
     }
