@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -20,23 +21,17 @@ fn main() {
     )
 }
 fn day_one_part_one(numbers: Vec<u32>, target: u32) -> Vec<u32> {
-    for x in &numbers {
-        for y in &numbers {
-            if x + y == target {
-                return vec![*x, *y];
-            }
+    for (&a, &b) in numbers.iter().tuple_combinations() {
+        if a + b == target {
+            return vec![a, b];
         }
     }
     return vec![];
 }
 fn day_one_part_two(numbers: Vec<u32>, target: u32) -> Vec<u32> {
-    for x in &numbers {
-        for y in &numbers {
-            for z in &numbers {
-                if x + y + z == target {
-                    return vec![*x, *y, *z];
-                }
-            }
+    for (&a, &b, &c) in numbers.iter().tuple_combinations() {
+        if a + b + c == target {
+            return vec![a, b, c];
         }
     }
     return vec![];
